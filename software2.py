@@ -32,7 +32,7 @@ def broadcast(message):
 
 # Set up the server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(('127.0.0.1', 5555))
+server.bind(('172.27.14.222', 5555))
 server.listen()
 
 print("Server is listening for incoming connections...")
