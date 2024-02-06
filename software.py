@@ -71,4 +71,4 @@ class Client:
         self.window.destroy()
 
 # Start the client
-client = Client('172.27.14.222', 5555)
+client = Client("5.161.72.150",8007)
