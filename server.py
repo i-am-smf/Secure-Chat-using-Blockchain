@@ -21,7 +21,7 @@ class ZchatDB:
             CREATE TABLE IF NOT EXISTS message_histroy(
                 timestamp INT,
                 mobile_number INT,
-                active_id VARCHAR(100)
+                message VARCHAR(255)
             )''')
     
     def insert(self,data_list):

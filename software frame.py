@@ -1,9 +1,10 @@
 from tkinter import *
+import mysql.connector
 import datetime
 
 main=Tk()
 main.title("Z Chat")
-main.geometry("1200x800")
+main.geometry("1200x700")
 main.iconbitmap("icon.ico")
 main.resizable(False,False)
 
@@ -61,17 +62,59 @@ class VerticalScrolledFrame:
     def __str__(self):
         return str(self.outer)
 
-info_frame = Frame(main,background="#AFEEEE",width=200)
-info_frame.pack(side=LEFT, fill=BOTH)
+class ZchatDB:
+    def __init__(self) -> None:
 
-chatframe = VerticalScrolledFrame(main,background="#87CEFA",width=980,height=730)
+        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u926_wGN7NXcLux', passwd='N!.o0GycJTSTA0Jm3VpU.R1F',database="s926_chathistory")
+        self.cur = self.connect.cursor()
+    
+    def insert(self,data_list):
+        Game_ID = data_list[0]
+        Game_Name = data_list[1]
+        Category = data_list[2]
+        Price = data_list[3]
+        Discounted_Price = data_list[4]
+        Rating = data_list[5]
+        Friends_List = data_list[6]
+        Player_Support = data_list[7]
+
+        insert_query = '''
+            INSERT INTO Games 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        '''
+        data = (Game_ID, Game_Name, Category, Price, Discounted_Price, Rating, Friends_List, Player_Support)
+        try:
+            self.cur.execute(insert_query, data)
+        except:
+            self.__init__()
+            self.insert()
+        self.connect.commit()  
+
+db=ZchatDB()
+
+info_frame = Frame(main,background="#AFEEEE",width=200,height=700)
+info_frame.place(x=1,y=1)
+
+chatframe = VerticalScrolledFrame(main,background="#87CEFA",width=980,height=610)
 chatframe.place(x=200,y=1)
 
-textbox = Text(main,height=4,width=80,font=("Arial",15))
-textbox.place(x=200,y=730)
+def reload():
 
-send_button=Button(main,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=None)
-send_button.place(x=1090,y=737)
+    try:
+        chatframe.destroy()
+    except:
+        pass
+    chatframe = VerticalScrolledFrame(main,background="#87CEFA",width=980,height=610)
+    chatframe.place(x=200,y=1)
+
+    update_scrollbar
+
+textbox = Text(main,height=4,width=80,font=("Arial",15))
+textbox.place(x=200,y=610)
+
+send_button=Button(main,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=reload)
+send_button.place(x=1090,y=625)
+
 
 for i in range(1,110):
     if i%2==0:

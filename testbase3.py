@@ -1,36 +1,46 @@
-from tkinter import *
+from cryptography.fernet import Fernet
+import hashlib
+import base64
 
-class AutoScrollListBox_demo:
-    def __init__(self, master):
-        frame = Frame(master, width=500, height=400, bd=1)
-        frame.pack()
+def generate_key_from_user_input():
+    # Ask the user for input to use as a key seed
+    user_input = input("Enter a string as a key: ")
 
-        self.listbox_log = Listbox(frame, height=4)
-        self.scrollbar_log = Scrollbar(frame) 
+    # Convert the user input to bytes using UTF-8 encoding
+    key_seed = user_input.encode('utf-8')
 
-        self.scrollbar_log.pack(side=RIGHT, fill=Y)
-        self.listbox_log.pack(side=LEFT,fill=Y) 
+    # Use SHA-256 to derive a 32-byte key from the input
+    key = hashlib.pbkdf2_hmac('sha256', key_seed, b'salt', 100000)
+    print(key)
+    # Use the key to generate a Fernet cipher suite
+    cipher_suite = Fernet(base64.urlsafe_b64encode(key))
 
-        self.listbox_log.configure(yscrollcommand = self.scrollbar_log.set)
-        self.scrollbar_log.configure(command = self.listbox_log.yview)
+    return cipher_suite
 
-        b = Button(text="Add", command=self.onAdd)
-        b.pack()
-
-        #Just to show unique items in the list
-        self.item_num = 0
-
-    def onAdd(self):
-        self.listbox_log.insert(END, "test %s" %(str(self.item_num)))       #Insert a new item at the end of the list
-
-        self.listbox_log.select_clear(self.listbox_log.size() - 2)   #Clear the current selected item     
-        self.listbox_log.select_set(END)                             #Select the new item
-        self.listbox_log.yview(END)                                  #Set the scrollbar to the end of the listbox
-
-        self.item_num += 1
+# Rest of the code remains the same
 
 
-root = Tk()
-all = AutoScrollListBox_demo(root)
-root.title('AutoScroll ListBox Demo')
-root.mainloop()
+def encrypt_message(cipher_suite:Fernet, message:str):
+    # Encrypt the message
+    encrypted_message = cipher_suite.encrypt(message.encode('utf-8'))
+    return encrypted_message
+
+def decrypt_message(cipher_suite:Fernet, encrypted_message:str):
+    # Decrypt the message
+    encrypted_message=b'gAAAAABlw8HCy-_a7KKPZXfiespg09ld6KD6YvPPPW28J3bIgDaOXfPCpC1Jkgxch5oqm45HV23XF0DUIoHW0-lLORlYjTPBcg=='
+    decrypted_message = cipher_suite.decrypt(encrypted_message).decode('utf-8')
+    return decrypted_message
+
+# Get the key from user input
+cipher = generate_key_from_user_input()
+
+# Get a message from the user
+# user_message = input("Enter a message to encrypt: ")
+
+# Encrypt the message
+# encrypted_message = encrypt_message(cipher, user_message)
+# print("Encrypted Message:", encrypted_message)
+
+# Decrypt the message
+decrypted_message = decrypt_message(cipher, "encrypted_message")
+print("Decrypted Message:", decrypted_message)

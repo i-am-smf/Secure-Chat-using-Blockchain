@@ -1,4 +1,5 @@
 from cryptography.fernet import Fernet
+import base64
 
 class SecureChat:
     def __init__(self, key):
@@ -16,7 +17,8 @@ class SecureChat:
 # Example usage
 if __name__ == "__main__":
     # Simulate key exchange (in a real-world scenario, this would involve secure key distribution)
-    key = Fernet.generate_key()
+    # key = Fernet.generate_key()
+    key = base64.b64encode("alamtlksk4khvm*lamallooiwn)olaikjsfn)*&^#".encode('utf-8'))
 
     alice_chat = SecureChat(key)
     bob_chat = SecureChat(key)
