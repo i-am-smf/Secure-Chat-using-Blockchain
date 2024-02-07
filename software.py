@@ -13,7 +13,7 @@ class Client:
             self.nickname = messagebox.showwarning(title="Not Found",message="The server don't response to the client system")
             return
 
-        self.nickname = simpledialog.askstring("Nickname", "Please choose a nickname:")
+        self.nickname = simpledialog.askstring("ZChat", "Please Enter your Mobile Number")
         self.gui_done = False
         self.running = True
 
