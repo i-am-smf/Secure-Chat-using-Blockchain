@@ -2,22 +2,25 @@ import socket
 import threading
 import mysql.connector
 
-class TestDB:
+class ZchatDB:
     def __init__(self) -> None:
 
         self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u926_wGN7NXcLux', passwd='N!.o0GycJTSTA0Jm3VpU.R1F',database="s926_chathistory")
         self.cur = self.connect.cursor()
         self.create_tables()
-        # self.cur.execute('USE Zchat')
 
     def create_tables(self):
-        # self.cur.execute('CREATE DATABASE IF NOT EXISTS Zchat')
-        # self.cur.execute('CREATE DATABASE IF NOT EXISTS zchat_user_history')
-        # self.cur.execute('USE Zchat')
         self.cur.execute('''
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS users(
                 mobile_number INT PRIMARY KEY,
                 username VARCHAR(100),
+                active_ip VARCHAR(15)
+            )''')
+    
+        self.cur.execute('''
+            CREATE TABLE IF NOT EXISTS message_histroy(
+                timestamp INT,
+                mobile_number INT,
                 active_id VARCHAR(100)
             )''')
     
@@ -43,7 +46,7 @@ class TestDB:
             self.insert()
         self.connect.commit()  
 
-db=TestDB()
+db=ZchatDB()
 
 
 def handle_client(client_socket):
