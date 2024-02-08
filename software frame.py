@@ -1,12 +1,9 @@
 from tkinter import *
 import mysql.connector
 import datetime
+from tkinter import messagebox
 
-main=Tk()
-main.title("Z Chat")
-main.geometry("1200x700")
-main.iconbitmap("icon.ico")
-main.resizable(False,False)
+
 
 class VerticalScrolledFrame:
     def __init__(self, master, **kwargs):
@@ -26,7 +23,7 @@ class VerticalScrolledFrame:
         self.vsb['command'] = self.canvas.yview
 
         self.inner = Frame(self.canvas, bg=bg)
-        self.canvas.create_window(4, 4, window=self.inner, anchor='nw',width=970)
+        self.canvas.create_window(4, 4, window=self.inner, anchor='nw',width=width)
         self.inner.bind("<Configure>", self._on_frame_configure)
 
         self.outer_attr = set(dir(Widget))
@@ -53,7 +50,6 @@ class VerticalScrolledFrame:
         self.canvas.unbind_all("<MouseWheel>")
 
     def _on_mousewheel(self, event):
-        """Linux uses event.num; Windows / Mac uses event.delta"""
         if event.num == 4 or event.delta > 0:
             self.canvas.yview_scroll(-1, "units" )
         elif event.num == 5 or event.delta < 0:
@@ -92,42 +88,93 @@ class ZchatDB:
 
 db=ZchatDB()
 
-info_frame = Frame(main,background="#AFEEEE",width=200,height=700)
-info_frame.place(x=1,y=1)
 
-chatframe = VerticalScrolledFrame(main,background="#87CEFA",width=980,height=610)
-chatframe.place(x=200,y=1)
+class Main(Tk):
+    def __init__(self, *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
+        self.title("Z Chat")
+        self.geometry("1200x700")
+        self.iconbitmap("icon.ico")
+        self.resizable(False,False)
+        self.bind("<Key>",self.clicker)
 
-def reload():
+        self.textbox = Text(self,height=4,width=80,font=("Arial",15))
+        self.textbox.place(x=200,y=610)
 
-    try:
-        chatframe.destroy()
-    except:
-        pass
-    chatframe = VerticalScrolledFrame(main,background="#87CEFA",width=980,height=610)
-    chatframe.place(x=200,y=1)
+        self.textbox.bind("<Return>",self.send_message)
+                
+        info_frame = Frame(self,background="#AFEEEE",width=200,height=700)
+        info_frame.place(x=1,y=1)
 
-    update_scrollbar
+        load_history_button=Button(info_frame,text="Load History",font=("Arial",20),foreground="#000080",background="#87CEFA",command=self.fake_history)
+        load_history_button.place(x=10,y=620)
 
-textbox = Text(main,height=4,width=80,font=("Arial",15))
-textbox.place(x=200,y=610)
+        self.chatframe = VerticalScrolledFrame(self,background="#87CEFA",width=980,height=610)
+        self.chatframe.place(x=200,y=1)
 
-send_button=Button(main,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=reload)
-send_button.place(x=1090,y=625)
+        send_button=Button(self,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=self.send_message)
+        send_button.place(x=1090,y=625)
 
 
-for i in range(1,110):
-    if i%2==0:
-        labelframe=LabelFrame(chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
-        labelframe.pack(padx=10,pady=10,anchor=E)
-    else:
-        labelframe=LabelFrame(chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
-        labelframe.pack(padx=10,pady=10,anchor=W)
+        self.mainloop()
+        
+    def reload(self):
 
-    Label(labelframe,text=i,font=("Arial",12)).pack(anchor=E)
+        try:
+            self.chatframe.destroy()
+        except:
+            pass
+        self.chatframe = VerticalScrolledFrame(self,background="#87CEFA",width=980,height=610)
+        self.chatframe.place(x=200,y=1)
 
-def update_scrollbar():
-    chatframe.canvas.yview_moveto(1.0)
+        self.update_scrollbar
 
-main.after(10,update_scrollbar)
-main.mainloop()
+
+    def update_scrollbar(self):
+        self.chatframe.canvas.yview_moveto(1)
+
+
+    def send_message(self,event=None):
+        message=self.textbox.get("1.0",END)
+        try:
+            if ord(message)==10:
+                messagebox.showwarning(title="Empty Message",message="Cannot send empty message in the feed")
+                return
+
+        except:
+            if message.startswith("1"):
+                labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
+                labelframe.pack(padx=10,pady=10,anchor=W)
+        
+            else:
+                labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
+                labelframe.pack(padx=10,pady=10,anchor=E)
+        
+            Label(labelframe,text=message,font=("Arial",12)).pack()
+            def clear_text():
+                self.textbox.delete("1.0",END)
+
+            self.chatframe.outer.after(10,self.update_scrollbar)
+            self.textbox.after(10,clear_text)
+
+    def fake_history(self):
+        self.reload()
+        for i in range(1,110):
+            if i%2==0:
+                labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
+                labelframe.pack(padx=10,pady=10,anchor=E)
+
+            else:
+                labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
+                labelframe.pack(padx=10,pady=10,anchor=W)
+
+            Label(labelframe,text=i,font=("Arial",12)).pack(anchor=E)
+
+        self.chatframe.outer.after(10,self.update_scrollbar)
+    
+    def clicker(self,event:Event):
+        if event.keysym=="slash":
+            self.textbox.focus()
+
+
+Main()
