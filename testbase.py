@@ -1,5 +1,6 @@
 from cryptography.fernet import Fernet
 import base64
+from tkinter import *
 
 class SecureChat:
     def __init__(self, key):

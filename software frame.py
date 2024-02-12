@@ -1,6 +1,7 @@
 from tkinter import *
 import mysql.connector
 import datetime
+from PIL import ImageTk,Image
 from tkinter import messagebox
 
 
@@ -114,10 +115,45 @@ class Main(Tk):
 
         send_button=Button(self,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=self.send_message)
         send_button.place(x=1090,y=625)
-
+        self.login()
+        self.withdraw()
 
         self.mainloop()
         
+    def showmainpage(self):
+        self.deiconify()
+
+    def login(self):
+        self.loginpage=Toplevel(self,background="azure3")
+        self.loginpage.title("Login Page")
+        self.loginpage.geometry("300x450")
+        self.loginpage.resizable(False,False)
+
+        imagelabel=Label(self.loginpage,image=ImageTk.PhotoImage((Image.open(f"main_logo.png")).resize((50,50))),background="azure3")
+        imagelabel.place(relx=0.29, rely=0.2, anchor=CENTER)
+
+        usernamelabel=Label(self.loginpage,text="Enter User Name",background="azure3")
+        usernamelabel.place(relx=0.2, rely=0.3, anchor=W)
+        
+        self.usernameentry=Entry(self.loginpage,width=30)
+        self.usernameentry.place(relx=0.21, rely=0.35, anchor=W)
+        
+        mobilenumberlabel=Label(self.loginpage,text="Enter Mobile Number",background="azure3")
+        mobilenumberlabel.place(relx=0.2, rely=0.4, anchor=W)
+        
+        self.number_entry=Entry(self.loginpage,width=30)
+        self.number_entry.place(relx=0.21, rely=0.45, anchor=W)
+        
+        self.number_entry.bind("<Return>")
+        
+        self.loginbutton=Button(self.loginpage,text="Login",background="azure3",width=15,height=2,command=self.reload,justify="center")
+        self.loginbutton.place(x=100, y=300, anchor=W,bordermode="inside")
+        
+        self.loginpage.protocol("WM_DELETE_WINDOW", self.showmainpage)
+        
+    def on_closing(self):
+        self.destroy()
+
     def reload(self):
 
         try:
