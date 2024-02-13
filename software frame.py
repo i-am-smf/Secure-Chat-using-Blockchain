@@ -3,7 +3,7 @@ import mysql.connector
 import datetime
 from PIL import ImageTk,Image
 from tkinter import messagebox
-
+import socket
 
 
 class VerticalScrolledFrame:
@@ -50,7 +50,7 @@ class VerticalScrolledFrame:
         self.canvas.unbind_all("<5>")
         self.canvas.unbind_all("<MouseWheel>")
 
-    def _on_mousewheel(self, event):
+    def _on_mousewheel(self, event:Event):
         if event.num == 4 or event.delta > 0:
             self.canvas.yview_scroll(-1, "units" )
         elif event.num == 5 or event.delta < 0:
@@ -65,30 +65,41 @@ class ZchatDB:
         self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u926_wGN7NXcLux', passwd='N!.o0GycJTSTA0Jm3VpU.R1F',database="s926_chathistory")
         self.cur = self.connect.cursor()
     
-    def insert(self,data_list):
-        Game_ID = data_list[0]
-        Game_Name = data_list[1]
-        Category = data_list[2]
-        Price = data_list[3]
-        Discounted_Price = data_list[4]
-        Rating = data_list[5]
-        Friends_List = data_list[6]
-        Player_Support = data_list[7]
+    def check_user(self,mobile_number,active_id):
+        try:
+            self.cur.execute(f"SELECT * FROM users where mobile_number = {mobile_number}")
+            result=self.cur.fetchall()
+        except:
+            return False
+        
+        if len(result)>0:
+            self.cur.execute(f"UPDATE users SET active_id = '{active_id}' where mobile_number = '{mobile_number}'")
+            self.connect.commit()
+            return True
+        else:
+            return False
+        
+    def new_user(self,username,mobile_number,active_id):
+
 
         insert_query = '''
-            INSERT INTO Games 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO users 
+            VALUES (%s, %s, %s)
         '''
-        data = (Game_ID, Game_Name, Category, Price, Discounted_Price, Rating, Friends_List, Player_Support)
+
+        data = (username,mobile_number,active_id)
+
         try:
             self.cur.execute(insert_query, data)
+        
         except:
             self.__init__()
-            self.insert()
+            self.new_user()
+
         self.connect.commit()  
-
+        return True
+    
 db=ZchatDB()
-
 
 class Main(Tk):
     def __init__(self, *args, **kwargs):
@@ -97,6 +108,8 @@ class Main(Tk):
         self.geometry("1200x700")
         self.iconbitmap("icon.ico")
         self.resizable(False,False)
+        self.withdraw()
+
         self.bind("<Key>",self.clicker)
 
         self.textbox = Text(self,height=4,width=80,font=("Arial",15))
@@ -116,7 +129,6 @@ class Main(Tk):
         send_button=Button(self,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=self.send_message)
         send_button.place(x=1090,y=625)
         self.login()
-        self.withdraw()
 
         self.mainloop()
         
@@ -127,10 +139,8 @@ class Main(Tk):
         self.loginpage=Toplevel(self,background="azure3")
         self.loginpage.title("Login Page")
         self.loginpage.geometry("300x450")
+        self.loginpage.iconbitmap("icon.ico")
         self.loginpage.resizable(False,False)
-
-        imagelabel=Label(self.loginpage,image=ImageTk.PhotoImage((Image.open(f"main_logo.png")).resize((50,50))),background="azure3")
-        imagelabel.place(relx=0.29, rely=0.2, anchor=CENTER)
 
         usernamelabel=Label(self.loginpage,text="Enter User Name",background="azure3")
         usernamelabel.place(relx=0.2, rely=0.3, anchor=W)
@@ -144,16 +154,48 @@ class Main(Tk):
         self.number_entry=Entry(self.loginpage,width=30)
         self.number_entry.place(relx=0.21, rely=0.45, anchor=W)
         
-        self.number_entry.bind("<Return>")
+        self.number_entry.bind("<Return>",self.check_user)
         
-        self.loginbutton=Button(self.loginpage,text="Login",background="azure3",width=15,height=2,command=self.reload,justify="center")
+        self.loginbutton=Button(self.loginpage,text="Login",background="azure3",width=15,height=2,command=self.check_user,justify="center")
         self.loginbutton.place(x=100, y=300, anchor=W,bordermode="inside")
         
-        self.loginpage.protocol("WM_DELETE_WINDOW", self.showmainpage)
+        self.loginpage.protocol("WM_DELETE_WINDOW", self.destroy)
         
     def on_closing(self):
         self.destroy()
 
+    def check_user(self,event=None):
+        if self.usernameentry.get()=="" or self.number_entry.get() == "" or self.usernameentry.get().startswith(" ") or self.number_entry.get().startswith(" "):
+            messagebox.showwarning(title="Invalid Entry",message="Please correct the given Data")
+            self.loginpage_reload()
+            return
+        
+        mobile_number=self.number_entry.get()
+        active_id=socket.gethostbyname(socket.gethostname())
+        username=self.usernameentry.get()
+
+        try:
+            int(mobile_number)
+        except:
+            messagebox.showerror(title="Invalid Mobile Number",message="Please Enter a valid Mobile Number")
+            return
+
+            
+        if db.check_user(mobile_number=mobile_number,active_id=active_id):
+            self.loginpage.destroy()
+            self.deiconify()
+        else:
+            if messagebox.askokcancel(title="Register New User",message="Are you want to register as new user ?"):
+                if db.new_user(mobile_number,username,active_id=active_id):
+                    messagebox.showinfo(title="New Login Registered",message=f"Username: {username}\nMobile Number: {mobile_number}\nActive ID: {active_id}")
+                    self.loginpage_reload()
+            else:
+                self.loginpage_reload()
+
+    def loginpage_reload(self):
+        for i in self.loginpage.winfo_children():
+            if isinstance(i,Entry):
+                i.delete(0,END)
     def reload(self):
 
         try:
