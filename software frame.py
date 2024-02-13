@@ -1,7 +1,7 @@
 from tkinter import *
 import mysql.connector
 import datetime
-from PIL import ImageTk,Image
+import json
 from tkinter import messagebox
 import socket
 
@@ -120,6 +120,12 @@ class Main(Tk):
         info_frame = Frame(self,background="#AFEEEE",width=200,height=700)
         info_frame.place(x=1,y=1)
 
+        self.usernamelabel=Label(info_frame,text="Username",font=(("Arial",18)),background="#AFEEEE",foreground="#000080")
+        self.usernamelabel.place(x=10,y=40)
+
+        self.mobilelabel=Label(info_frame,text="Mobile",font=(("Arial",18)),background="#AFEEEE",foreground="#000080")
+        self.mobilelabel.place(x=10,y=100)
+
         load_history_button=Button(info_frame,text="Load History",font=("Arial",20),foreground="#000080",background="#87CEFA",command=self.fake_history)
         load_history_button.place(x=10,y=620)
 
@@ -137,7 +143,7 @@ class Main(Tk):
 
     def login(self):
         self.loginpage=Toplevel(self,background="azure3")
-        self.loginpage.title("Login Page")
+        self.loginpage.title("Z Chat Login Page")
         self.loginpage.geometry("300x450")
         self.loginpage.iconbitmap("icon.ico")
         self.loginpage.resizable(False,False)
@@ -184,6 +190,9 @@ class Main(Tk):
         if db.check_user(mobile_number=mobile_number,active_id=active_id):
             self.loginpage.destroy()
             self.deiconify()
+            self.usernamelabel.configure(text=f"{username}")
+            self.mobilelabel.configure(text=f"{mobile_number}")
+
         else:
             if messagebox.askokcancel(title="Register New User",message="Are you want to register as new user ?"):
                 if db.new_user(mobile_number,username,active_id=active_id):
@@ -196,6 +205,7 @@ class Main(Tk):
         for i in self.loginpage.winfo_children():
             if isinstance(i,Entry):
                 i.delete(0,END)
+
     def reload(self):
 
         try:
@@ -207,19 +217,33 @@ class Main(Tk):
 
         self.update_scrollbar
 
-
     def update_scrollbar(self):
         self.chatframe.canvas.yview_moveto(1)
 
-
     def send_message(self,event=None):
         message=self.textbox.get("1.0",END)
-        try:
+        message_data={
+            "username":f"{self.usernamelabel.cget('text')}",
+            "mobile_number":f"{self.mobilelabel.cget('text')}",
+            "message":message
+        }
+
+        if message.startswith("\n"):
+            messagebox.showwarning(title="Empty Message",message="The first Line is Empty")
+            self.textbox.after(10,self.clear_text)
+            return
+
+        try:            
             if ord(message)==10:
                 messagebox.showwarning(title="Empty Message",message="Cannot send empty message in the feed")
+                self.textbox.after(10,self.clear_text)
                 return
 
         except:
+            if message.endswith("\n"):
+                message=message[:-1]
+                message_data["message"]=message
+
             if message.startswith("1"):
                 labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
                 labelframe.pack(padx=10,pady=10,anchor=W)
@@ -229,12 +253,13 @@ class Main(Tk):
                 labelframe.pack(padx=10,pady=10,anchor=E)
         
             Label(labelframe,text=message,font=("Arial",12)).pack()
-            def clear_text():
-                self.textbox.delete("1.0",END)
 
             self.chatframe.outer.after(10,self.update_scrollbar)
-            self.textbox.after(10,clear_text)
-
+            self.textbox.after(10,self.clear_text)
+    
+    def clear_text(self):
+        self.textbox.delete("1.0",END)
+    
     def fake_history(self):
         self.reload()
         for i in range(1,110):
@@ -253,6 +278,5 @@ class Main(Tk):
     def clicker(self,event:Event):
         if event.keysym=="slash":
             self.textbox.focus()
-
 
 Main()

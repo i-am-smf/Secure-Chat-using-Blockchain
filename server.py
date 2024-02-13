@@ -48,7 +48,6 @@ class ZchatDB:
 
 db=ZchatDB()
 
-
 def handle_client(client_socket):
     while True:
         try:
@@ -92,9 +91,7 @@ while True:
     print(f"Accepted connection from {client_addr}")
     print(client_addr,client_socket)
 
-    # Add the new client to the list
     clients.append(client_socket)
 
-    # Create a new thread to handle the client
     client_handler = threading.Thread(target=handle_client, args=(client_socket,))
     client_handler.start()
