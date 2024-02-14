@@ -62,7 +62,7 @@ class VerticalScrolledFrame:
 class ZchatDB:
     def __init__(self) -> None:
 
-        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u926_wGN7NXcLux', passwd='N!.o0GycJTSTA0Jm3VpU.R1F',database="s926_chathistory")
+        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u946_VhqYu6cZi0', passwd='d=a^xJuOm4jORFz^Odi!1tm7',database="s946_zchat")
         self.cur = self.connect.cursor()
     
     def insert(self,data_list):
