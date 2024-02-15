@@ -5,22 +5,22 @@ import mysql.connector
 class ZchatDB:
     def __init__(self) -> None:
 
-        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u926_wGN7NXcLux', passwd='N!.o0GycJTSTA0Jm3VpU.R1F',database="s926_chathistory")
+        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u946_VhqYu6cZi0', passwd='d=a^xJuOm4jORFz^Odi!1tm7',database="s946_zchat")
         self.cur = self.connect.cursor()
         self.create_tables()
 
     def create_tables(self):
         self.cur.execute('''
             CREATE TABLE IF NOT EXISTS users(
-                mobile_number INT PRIMARY KEY,
+                mobile_number VARCHAR(15) PRIMARY KEY,
                 username VARCHAR(100),
                 active_ip VARCHAR(15)
             )''')
     
         self.cur.execute('''
             CREATE TABLE IF NOT EXISTS message_histroy(
-                timestamp INT,
-                mobile_number INT,
+                timestamp VARCHAR(50),
+                mobile_number VARCHAR(15),
                 message VARCHAR(255)
             )''')
     

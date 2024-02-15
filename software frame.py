@@ -195,7 +195,7 @@ class Main(Tk):
 
         else:
             if messagebox.askokcancel(title="Register New User",message="Are you want to register as new user ?"):
-                if db.new_user(mobile_number,username,active_id=active_id):
+                if db.new_user(mobile_number,username,active_id):
                     messagebox.showinfo(title="New Login Registered",message=f"Username: {username}\nMobile Number: {mobile_number}\nActive ID: {active_id}")
                     self.loginpage_reload()
             else:
