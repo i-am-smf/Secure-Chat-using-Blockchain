@@ -73,7 +73,7 @@ class ZchatDB:
             return False
         
         if len(result)>0:
-            self.cur.execute(f"UPDATE users SET active_id = '{active_id}' where mobile_number = '{mobile_number}'")
+            self.cur.execute(f"UPDATE users SET active_ip = '{active_id}' where mobile_number = '{mobile_number}'")
             self.connect.commit()
             return True
         else:
@@ -83,7 +83,7 @@ class ZchatDB:
 
 
         insert_query = '''
-            INSERT INTO users 
+            INSERT INTO users(mobile_number,username,active_ip) 
             VALUES (%s, %s, %s)
         '''
 
