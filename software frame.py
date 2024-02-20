@@ -67,7 +67,7 @@ class ZchatDB:
     
     def check_user(self,mobile_number,active_id):
         try:
-            self.cur.execute(f"SELECT * FROM users where mobile_number = {mobile_number}")
+            self.cur.execute(f"SELECT * FROM users where mobile_number = dataenc({mobile_number})")
             result=self.cur.fetchall()
         except:
             return False
