@@ -12,16 +12,16 @@ class ZchatDB:
     def create_tables(self):
         self.cur.execute('''
             CREATE TABLE IF NOT EXISTS users(
-                mobile_number VARCHAR(15) PRIMARY KEY,
+                mobile_number VARCHAR(1000),
                 username VARCHAR(100),
-                active_ip VARCHAR(15)
+                active_ip VARCHAR(1000)
             )''')
     
         self.cur.execute('''
             CREATE TABLE IF NOT EXISTS message_histroy(
                 timestamp VARCHAR(50),
-                mobile_number VARCHAR(15),
-                message VARCHAR(255)
+                mobile_number VARCHAR(1000),
+                message VARCHAR(1000)
             )''')
     
     def insert(self,data_list):

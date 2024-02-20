@@ -83,7 +83,7 @@ class ZchatDB:
 
 
         insert_query = '''
-            INSERT INTO users 
+            INSERT INTO users(mobile_number,username,active_ip) 
             VALUES (%s, %s, %s)
         '''
 
