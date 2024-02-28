@@ -104,6 +104,10 @@ db=ZchatDB()
 class Main(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
+        
+        if not self.connect():
+            self.destroy()
+        
         self.title("Z Chat")
         self.geometry("1200x700")
         self.iconbitmap("icon.ico")
@@ -136,8 +140,20 @@ class Main(Tk):
         send_button.place(x=1090,y=625)
         self.login()
 
+        self.loginpage.protocol("WM_DELETE_WINDOW", self.stop)
         self.mainloop()
+
+
+    def connect(self):
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.client.connect(("127.0.0.1", 5500))
+            return True
         
+        except Exception as error:
+            self.nickname = messagebox.showwarning(title="Connection Error",message="Please check your internet and try again.\nIf your internet isn't problem Please contact admin to resolve this issue")
+            return False
+
     def showmainpage(self):
         self.deiconify()
 
@@ -165,7 +181,7 @@ class Main(Tk):
         self.loginbutton=Button(self.loginpage,text="Login",background="azure3",width=15,height=2,command=self.check_user,justify="center")
         self.loginbutton.place(x=100, y=300, anchor=W,bordermode="inside")
         
-        self.loginpage.protocol("WM_DELETE_WINDOW", self.destroy)
+        self.loginpage.protocol("WM_DELETE_WINDOW", self.stop)
         
     def on_closing(self):
         self.destroy()
@@ -244,19 +260,41 @@ class Main(Tk):
                 message=message[:-1]
                 message_data["message"]=message
 
-            if message.startswith("1"):
-                labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
-                labelframe.pack(padx=10,pady=10,anchor=W)
-        
-            else:
-                labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
-                labelframe.pack(padx=10,pady=10,anchor=E)
-        
+            labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
+            labelframe.pack(padx=10,pady=10,anchor=E)
+    
             Label(labelframe,text=message,font=("Arial",12)).pack()
 
             self.chatframe.outer.after(10,self.update_scrollbar)
             self.textbox.after(10,self.clear_text)
-    
+
+            message = self.message_entry.get()
+            message = f"{self.nickname}: {message}"
+            self.client.send(message.encode('utf-8'))
+            self.message_entry.delete(0, END)
+
+    def receive(self):
+        while self.running:
+            try:
+                message = self.client.recv(1024).decode('utf-8')
+                if message == 'NICK':
+                    self.client.send(self.nickname.encode('utf-8'))
+                else:
+                    if self.gui_done:
+                        self.chat_box.config(state=NORMAL)
+                        
+                        self.chat_box.insert(END, message + '\n')
+                        self.chat_box.config(state=DISABLED)
+                        self.chat_box.see(END)
+            except Exception as e:
+                print(f"Error: {e}")
+                self.running = False
+
+    def stop(self):
+        self.running = False
+        self.client.close()
+        self.destroy()
+
     def clear_text(self):
         self.textbox.delete("1.0",END)
     

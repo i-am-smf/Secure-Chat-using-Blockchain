@@ -1,14 +1,7 @@
+from requests import get
 import json
+data=get("https://discord.com/api/guilds/796762525412360226/widget.json").json()
 
-dict={
-    1:"smf",
-    2:"rsa"
-}
-
-dump=json.dumps(dict)
-
-print(type(dump))
-
-dict2=json.loads(dump)
-
-print(type(dict2))
+with open("test.json","w") as f:
+    json.dump(data,f)
+    f.close()

@@ -71,4 +71,4 @@ class Client:
         self.window.destroy()
 
 # Start the client
-client = Client("5.161.72.150",8007)
+client = Client(socket.gethostbyname(socket.gethostname()),5555)
