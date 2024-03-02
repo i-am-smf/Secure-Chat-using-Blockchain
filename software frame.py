@@ -1,9 +1,9 @@
 from tkinter import *
-import mysql.connector
 import datetime
 import json
 from tkinter import messagebox
 import socket
+import threading
 
 
 class VerticalScrolledFrame:
@@ -59,69 +59,26 @@ class VerticalScrolledFrame:
     def __str__(self):
         return str(self.outer)
 
-class ZchatDB:
-    def __init__(self) -> None:
 
-        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u946_VhqYu6cZi0', passwd='d=a^xJuOm4jORFz^Odi!1tm7',database="s946_zchat")
-        self.cur = self.connect.cursor()
-    
-    def check_user(self,mobile_number,active_id):
-        try:
-            self.cur.execute(f"SELECT * FROM users where mobile_number = dataenc({mobile_number})")
-            result=self.cur.fetchall()
-        except:
-            return False
-        
-        if len(result)>0:
-            self.cur.execute(f"UPDATE users SET active_ip = '{active_id}' where mobile_number = '{mobile_number}'")
-            self.connect.commit()
-            return True
-        else:
-            return False
-        
-    def new_user(self,username,mobile_number,active_id):
+class Software:
+    def __init__(self):
+        pass
+    def software(self):
+        self.main=Tk()
+        self.main.title("Z Chat")
+        self.main.geometry("1200x700")
+        self.main.iconbitmap("icon.ico")
+        self.main.resizable(False,False)
+        self.main.withdraw()
 
+        self.main.bind("<Key>",self.clicker)
 
-        insert_query = '''
-            INSERT INTO users(mobile_number,username,active_ip) 
-            VALUES (%s, %s, %s)
-        '''
+        self.message_entry = Text(self.main,height=4,width=80,font=("Arial",15))
+        self.message_entry.place(x=200,y=610)
 
-        data = (username,mobile_number,active_id)
-
-        try:
-            self.cur.execute(insert_query, data)
-        
-        except:
-            self.__init__()
-            self.new_user()
-
-        self.connect.commit()  
-        return True
-    
-db=ZchatDB()
-
-class Main(Tk):
-    def __init__(self, *args, **kwargs):
-        Tk.__init__(self, *args, **kwargs)
-        
-        if not self.connect():
-            self.destroy()
-        
-        self.title("Z Chat")
-        self.geometry("1200x700")
-        self.iconbitmap("icon.ico")
-        self.resizable(False,False)
-        self.withdraw()
-
-        self.bind("<Key>",self.clicker)
-
-        self.textbox = Text(self,height=4,width=80,font=("Arial",15))
-        self.textbox.place(x=200,y=610)
-
-        self.textbox.bind("<Return>",self.send_message)
+        self.message_entry.bind("<Return>",self.send_message)
                 
-        info_frame = Frame(self,background="#AFEEEE",width=200,height=700)
+        info_frame = Frame(self.main,background="#AFEEEE",width=200,height=700)
         info_frame.place(x=1,y=1)
 
         self.usernamelabel=Label(info_frame,text="Username",font=(("Arial",18)),background="#AFEEEE",foreground="#000080")
@@ -133,32 +90,37 @@ class Main(Tk):
         load_history_button=Button(info_frame,text="Load History",font=("Arial",20),foreground="#000080",background="#87CEFA",command=self.fake_history)
         load_history_button.place(x=10,y=620)
 
-        self.chatframe = VerticalScrolledFrame(self,background="#87CEFA",width=980,height=610)
+        self.chatframe = VerticalScrolledFrame(self.main,background="#87CEFA",width=980,height=610)
         self.chatframe.place(x=200,y=1)
 
-        send_button=Button(self,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=self.send_message)
+        send_button=Button(self.main,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=self.send_message)
         send_button.place(x=1090,y=625)
         self.login()
 
         self.loginpage.protocol("WM_DELETE_WINDOW", self.stop)
-        self.mainloop()
+        self.main.mainloop()
 
+    def receive_thread(self):
+        threading.Thread(target=self.receive).start()        
 
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self.client.connect(("127.0.0.1", 5500))
+            self.client.connect((socket.gethostbyname(socket.gethostname()), 5555))
+            self.client_connected=True
             return True
         
         except Exception as error:
+            print(error)
             self.nickname = messagebox.showwarning(title="Connection Error",message="Please check your internet and try again.\nIf your internet isn't problem Please contact admin to resolve this issue")
             return False
 
+
     def showmainpage(self):
-        self.deiconify()
+        self.main.deiconify()
 
     def login(self):
-        self.loginpage=Toplevel(self,background="azure3")
+        self.loginpage=Toplevel(self.main,background="azure3")
         self.loginpage.title("Z Chat Login Page")
         self.loginpage.geometry("300x450")
         self.loginpage.iconbitmap("icon.ico")
@@ -184,7 +146,22 @@ class Main(Tk):
         self.loginpage.protocol("WM_DELETE_WINDOW", self.stop)
         
     def on_closing(self):
-        self.destroy()
+        self.main.destroy()
+
+    def connect_user(self,mobile_number,active_ip):
+        dict_data={
+            "process":"user_check",
+            "mobile_number":mobile_number,
+            "active_ip":active_ip
+        }
+        self.client.send(json.dumps(dict_data).encode('utf-8'))
+        server_response = self.client.recv(1024).decode("utf-8")
+        server_response=json.loads(server_response)
+
+        if server_response['process']=="found":
+            return True
+        elif server_response['process']=="notfound":
+            return False
 
     def check_user(self,event=None):
         if self.usernameentry.get()=="" or self.number_entry.get() == "" or self.usernameentry.get().startswith(" ") or self.number_entry.get().startswith(" "):
@@ -193,7 +170,7 @@ class Main(Tk):
             return
         
         mobile_number=self.number_entry.get()
-        active_id=socket.gethostbyname(socket.gethostname())
+        active_ip=socket.gethostbyname(socket.gethostname())
         username=self.usernameentry.get()
 
         try:
@@ -201,18 +178,24 @@ class Main(Tk):
         except:
             messagebox.showerror(title="Invalid Mobile Number",message="Please Enter a valid Mobile Number")
             return
-
             
-        if db.check_user(mobile_number=mobile_number,active_id=active_id):
+        if self.connect_user(mobile_number=mobile_number,active_ip=active_ip):
             self.loginpage.destroy()
-            self.deiconify()
+            self.main.deiconify()
             self.usernamelabel.configure(text=f"{username}")
             self.mobilelabel.configure(text=f"{mobile_number}")
 
         else:
             if messagebox.askokcancel(title="Register New User",message="Are you want to register as new user ?"):
-                if db.new_user(mobile_number,username,active_id):
-                    messagebox.showinfo(title="New Login Registered",message=f"Username: {username}\nMobile Number: {mobile_number}\nActive ID: {active_id}")
+                dict_data={
+                    "process":"new_user",
+                    "username":username,
+                    "mobile_number":mobile_number
+                }
+                self.client.send(json.dumps(dict_data).encode("utf-8"))
+                server_response = json.loads(self.client.recv(1024).decode("utf-8"))
+                if server_response["status"]:
+                    messagebox.showinfo(title="New Login Registered",message=f"Username: {username}\nMobile Number: {mobile_number}\nActive ID: {active_ip}")
                     self.loginpage_reload()
             else:
                 self.loginpage_reload()
@@ -223,7 +206,6 @@ class Main(Tk):
                 i.delete(0,END)
 
     def reload(self):
-
         try:
             self.chatframe.destroy()
         except:
@@ -237,7 +219,7 @@ class Main(Tk):
         self.chatframe.canvas.yview_moveto(1)
 
     def send_message(self,event=None):
-        message=self.textbox.get("1.0",END)
+        message=self.message_entry.get("1.0",END)
         message_data={
             "username":f"{self.usernamelabel.cget('text')}",
             "mobile_number":f"{self.mobilelabel.cget('text')}",
@@ -246,57 +228,55 @@ class Main(Tk):
 
         if message.startswith("\n"):
             messagebox.showwarning(title="Empty Message",message="The first Line is Empty")
-            self.textbox.after(10,self.clear_text)
+            self.message_entry.after(10,self.clear_text)
             return
 
-        try:            
-            if ord(message)==10:
-                messagebox.showwarning(title="Empty Message",message="Cannot send empty message in the feed")
-                self.textbox.after(10,self.clear_text)
-                return
 
-        except:
-            if message.endswith("\n"):
-                message=message[:-1]
-                message_data["message"]=message
+        if message.endswith("\n"):
+            message=message[:-1]
+            message_data["message"]=message
 
-            labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
-            labelframe.pack(padx=10,pady=10,anchor=E)
-    
-            Label(labelframe,text=message,font=("Arial",12)).pack()
+        labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
+        labelframe.pack(padx=10,pady=10,anchor=E)
 
-            self.chatframe.outer.after(10,self.update_scrollbar)
-            self.textbox.after(10,self.clear_text)
+        Label(labelframe,text=message,font=("Arial",12)).pack()
 
-            message = self.message_entry.get()
-            message = f"{self.nickname}: {message}"
-            self.client.send(message.encode('utf-8'))
-            self.message_entry.delete(0, END)
+        self.chatframe.outer.after(10,self.update_scrollbar)
+        self.message_entry.after(10,self.clear_text)
+
+        message_json = {
+            "process":"message_boardcast",
+            "mobile_number":self.mobilelabel.cget("text"),
+            "message":message
+        }
+        
+        self.client.send(json.dumps(message_json).encode("utf-8"))
+        self.clear_text
 
     def receive(self):
-        while self.running:
-            try:
-                message = self.client.recv(1024).decode('utf-8')
-                if message == 'NICK':
-                    self.client.send(self.nickname.encode('utf-8'))
-                else:
-                    if self.gui_done:
-                        self.chat_box.config(state=NORMAL)
-                        
-                        self.chat_box.insert(END, message + '\n')
-                        self.chat_box.config(state=DISABLED)
-                        self.chat_box.see(END)
-            except Exception as e:
-                print(f"Error: {e}")
-                self.running = False
+        print("Listening Server")
+        try:
+            dict_data = json.loads(self.client.recv(1024).decode('utf-8'))
+            if dict_data['process'] == 'message_boardcast':
+                
+                labelframe=LabelFrame(self.chatframe,text=f"{dict_data['username']} {datetime.datetime.now().__format__('%d-%m-%Y %H:%M:%S')}")
+                labelframe.pack(padx=10,pady=10,anchor=E)
+                
+                Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack(anchor=E)
+
+                self.chatframe.outer.after(10,self.update_scrollbar)
+                self.main.after(100,self.receive)
+
+        except Exception as e:
+            print(f"Error: {e}")
 
     def stop(self):
         self.running = False
         self.client.close()
-        self.destroy()
+        self.main.destroy()
 
     def clear_text(self):
-        self.textbox.delete("1.0",END)
+        self.message_entry.delete("1.0",END)
     
     def fake_history(self):
         self.reload()
@@ -315,6 +295,6 @@ class Main(Tk):
     
     def clicker(self,event:Event):
         if event.keysym=="slash":
-            self.textbox.focus()
+            self.message_entry.focus()
 
-Main()
+Software()
