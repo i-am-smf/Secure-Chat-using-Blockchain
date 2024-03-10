@@ -5,7 +5,7 @@ from tkinter import messagebox
 import socket
 import threading
 
-
+    
 class VerticalScrolledFrame:
     def __init__(self, master, **kwargs):
         width = kwargs.pop('width', None)
@@ -62,7 +62,8 @@ class VerticalScrolledFrame:
 
 class Software:
     def __init__(self):
-        pass
+        self.connect()
+        threading.Thread(target=self.software).start()
     def software(self):
         self.main=Tk()
         self.main.title("Z Chat")
@@ -77,7 +78,7 @@ class Software:
         self.message_entry.place(x=200,y=610)
 
         self.message_entry.bind("<Return>",self.send_message)
-                
+        
         info_frame = Frame(self.main,background="#AFEEEE",width=200,height=700)
         info_frame.place(x=1,y=1)
 
@@ -97,24 +98,20 @@ class Software:
         send_button.place(x=1090,y=625)
         self.login()
 
-        self.loginpage.protocol("WM_DELETE_WINDOW", self.stop)
+        self.loginpage.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.main.mainloop()
-
-    def receive_thread(self):
-        threading.Thread(target=self.receive).start()        
 
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.client.connect((socket.gethostbyname(socket.gethostname()), 5555))
             self.client_connected=True
-            return True
         
         except Exception as error:
             print(error)
             self.nickname = messagebox.showwarning(title="Connection Error",message="Please check your internet and try again.\nIf your internet isn't problem Please contact admin to resolve this issue")
-            return False
-
+            self.on_closing()
+            return
 
     def showmainpage(self):
         self.main.deiconify()
@@ -142,11 +139,9 @@ class Software:
         
         self.loginbutton=Button(self.loginpage,text="Login",background="azure3",width=15,height=2,command=self.check_user,justify="center")
         self.loginbutton.place(x=100, y=300, anchor=W,bordermode="inside")
+        self.usernameentry.focus_force()
         
-        self.loginpage.protocol("WM_DELETE_WINDOW", self.stop)
-        
-    def on_closing(self):
-        self.main.destroy()
+        self.loginpage.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def connect_user(self,mobile_number,active_ip):
         dict_data={
@@ -157,7 +152,6 @@ class Software:
         self.client.send(json.dumps(dict_data).encode('utf-8'))
         server_response = self.client.recv(1024).decode("utf-8")
         server_response=json.loads(server_response)
-
         if server_response['process']=="found":
             return True
         elif server_response['process']=="notfound":
@@ -178,10 +172,11 @@ class Software:
         except:
             messagebox.showerror(title="Invalid Mobile Number",message="Please Enter a valid Mobile Number")
             return
-            
+
         if self.connect_user(mobile_number=mobile_number,active_ip=active_ip):
             self.loginpage.destroy()
             self.main.deiconify()
+            threading.Thread(target=self.receive).start()
             self.usernamelabel.configure(text=f"{username}")
             self.mobilelabel.configure(text=f"{mobile_number}")
 
@@ -226,7 +221,8 @@ class Software:
             "message":message
         }
 
-        if message.startswith("\n"):
+        if message.startswith("\n") and len(message.split("\n"))<1:
+
             messagebox.showwarning(title="Empty Message",message="The first Line is Empty")
             self.message_entry.after(10,self.clear_text)
             return
@@ -258,22 +254,29 @@ class Software:
         try:
             dict_data = json.loads(self.client.recv(1024).decode('utf-8'))
             if dict_data['process'] == 'message_boardcast':
-                
-                labelframe=LabelFrame(self.chatframe,text=f"{dict_data['username']} {datetime.datetime.now().__format__('%d-%m-%Y %H:%M:%S')}")
-                labelframe.pack(padx=10,pady=10,anchor=E)
-                
-                Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack(anchor=E)
+                if dict_data['mobile_number']!=self.mobilelabel.cget('text'):
+                    labelframe=LabelFrame(self.chatframe,text=f"{dict_data['username']} {datetime.datetime.now().__format__('%d-%m-%Y %H:%M:%S')}")
+                    labelframe.pack(padx=10,pady=10,anchor=W)
+                    Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack()
 
-                self.chatframe.outer.after(10,self.update_scrollbar)
-                self.main.after(100,self.receive)
+                    self.chatframe.outer.after(10,self.update_scrollbar)
+
+            self.main.after(100,self.receive)
 
         except Exception as e:
             print(f"Error: {e}")
 
-    def stop(self):
+
+    def on_closing(self):
         self.running = False
-        self.client.close()
-        self.main.destroy()
+        try:
+            self.client.close()
+        except:
+            pass
+        try:
+            self.main.destroy()
+        except:
+            pass
 
     def clear_text(self):
         self.message_entry.delete("1.0",END)

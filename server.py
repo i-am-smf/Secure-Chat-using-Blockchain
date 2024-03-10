@@ -96,7 +96,6 @@ class server:
                     break
                 # Broadcast the received message to all connected clients
                 self.process_data(client_socket,data)
-
             except Exception as e:
                 print(f"Error: {e}")
                 break
@@ -116,6 +115,7 @@ class server:
                 else:
                     data_json['process']="notfound"
                     client_socket.send(json.dumps(data_json).encode('utf-8'))
+                return
 
             if dict_data['process']=="new_user":
                 if db.new_user(dict_data['mobile_number'],dict_data['username'],client_socket.getsockname()[0]):
@@ -124,12 +124,14 @@ class server:
                         "status":True
                     }
                     client_socket.send(json.dumps(dict_data).encode("utf-8"))
-
+                return
+            
             if dict_data['process']=="message_boardcast":
                 print(dict_data)
                 dict_data['username']=db.get_username(dict_data['mobile_number'])
                 self.broadcast(dict_data)
-
+                return
+            
         except Exception as e:
             data_json['process']="error"
             client_socket.send(json.dumps(data_json).encode('utf-8'))
@@ -138,7 +140,6 @@ class server:
     def broadcast(self,message):
         for client in self.clients:
             try:
-                # Send the message to all connected clients
                 client.send(json.dumps(message).encode('utf-8'))
                 print("Sended")
                 
