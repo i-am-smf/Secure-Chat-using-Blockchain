@@ -249,7 +249,6 @@ class Software:
         
         self.client.send(json.dumps(message_json).encode("utf-8"))
         self.clear_text
-        self.message_send_thread.join()
 
     def receive(self):
         print("Listening Server")
