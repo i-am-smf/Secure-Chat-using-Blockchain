@@ -108,7 +108,7 @@ class Software:
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self.client.connect((socket.gethostbyname(socket.gethostname()), 5555))
+            self.client.connect(("192.168.207.35", 5555))
             self.client_connected=True
         
         except Exception as error:
