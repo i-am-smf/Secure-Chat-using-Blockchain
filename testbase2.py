@@ -1,13 +1,30 @@
-from requests import get
-import json
-# data=get("https://api.mozambiquehe.re/bridge?auth=6e17a1fff557ed62842e0339c07a70ff&player=Yeshwin MI&platform=PC").json()
+# Import Required Library 
+from tkinter import *
+import win32api 
+from tkinter import filedialog 
 
-headers={"Authorization":"c2ddee0a-0d58-4cfb-a89b-358d888ed798"}
+# Create Tkinter Object 
+root = Tk() 
 
-accountId="REYAAN_3"
+# Set Title and geometry 
+root.title('Print Hard Copies') 
+root.geometry("200x200") 
 
-data=get(f"https://fortnite-api.com/v2/stats/br/v2/{accountId}",headers=headers).json()
+# Print File Function 
+def print_file(): 
+	
+	# Ask for file (Which you want to print) 
+	file_to_print = filedialog.askopenfilename( 
+	initialdir="/", title="Select file", 
+	filetypes=(("Text files", "*.txt"), ("all files", "*.*"))) 
+	
+	if file_to_print: 
+		
+		# Print Hard Copy of File 
+		win32api.ShellExecute(0, "print", file_to_print, None, ".", 0) 
 
-with open("test.json","w") as f:
-    json.dump(data,f)
-    f.close()
+# Make Button 
+Button(root, text="Print FIle", command=print_file).pack() 
+
+# Execute Tkinter 
+root.mainloop() 

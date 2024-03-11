@@ -42,7 +42,7 @@ class ZchatDB:
     def new_user(self,username,mobile_number,active_ip):
         
         insert_query = '''
-            INSERT INTO users(mobile_number,username,active_ip) 
+            INSERT INTO users(username,mobile_number,active_ip) 
             VALUES (%s, %s, %s)
         '''
         print(f"New use created.\nusername: {username}\nMobile Number: {mobile_number}\nActive IP: {active_ip}")
@@ -118,7 +118,7 @@ class server:
                 return
 
             if dict_data['process']=="new_user":
-                if db.new_user(dict_data['mobile_number'],dict_data['username'],client_socket.getsockname()[0]):
+                if db.new_user(dict_data['username'],dict_data['mobile_number'],client_socket.getsockname()[0]):
                     dict_data={
                         "process":"new_user_created",
                         "status":True

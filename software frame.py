@@ -64,6 +64,7 @@ class Software:
     def __init__(self):
         self.connect()
         threading.Thread(target=self.software).start()
+
     def software(self):
         self.main=Tk()
         self.main.title("Z Chat")
@@ -94,12 +95,15 @@ class Software:
         self.chatframe = VerticalScrolledFrame(self.main,background="#87CEFA",width=980,height=610)
         self.chatframe.place(x=200,y=1)
 
-        send_button=Button(self.main,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=self.send_message)
+        send_button=Button(self.main,text="Send",font=("Arial",20),foreground="#000080",background="#AFEEEE",command=lambda:self.send_message_thread)
         send_button.place(x=1090,y=625)
         self.login()
 
         self.loginpage.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.main.mainloop()
+    def send_message_thread(self):
+        self.message_send_thread=threading.Thread(self.send_message)
+        self.message_send_thread.start()
 
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -176,7 +180,9 @@ class Software:
         if self.connect_user(mobile_number=mobile_number,active_ip=active_ip):
             self.loginpage.destroy()
             self.main.deiconify()
-            threading.Thread(target=self.receive).start()
+            self.receive_thread=threading.Thread(target=self.receive)
+            self.receive_thread.start()
+
             self.usernamelabel.configure(text=f"{username}")
             self.mobilelabel.configure(text=f"{mobile_number}")
 
@@ -189,6 +195,7 @@ class Software:
                 }
                 self.client.send(json.dumps(dict_data).encode("utf-8"))
                 server_response = json.loads(self.client.recv(1024).decode("utf-8"))
+                print(server_response)
                 if server_response["status"]:
                     messagebox.showinfo(title="New Login Registered",message=f"Username: {username}\nMobile Number: {mobile_number}\nActive ID: {active_ip}")
                     self.loginpage_reload()
@@ -215,11 +222,7 @@ class Software:
 
     def send_message(self,event=None):
         message=self.message_entry.get("1.0",END)
-        message_data={
-            "username":f"{self.usernamelabel.cget('text')}",
-            "mobile_number":f"{self.mobilelabel.cget('text')}",
-            "message":message
-        }
+
 
         if message.startswith("\n") and len(message.split("\n"))<1:
 
@@ -227,10 +230,14 @@ class Software:
             self.message_entry.after(10,self.clear_text)
             return
 
-
+        message_json = {
+                "process":"message_boardcast",
+                "mobile_number":self.mobilelabel.cget("text")
+            }
+        
         if message.endswith("\n"):
             message=message[:-1]
-            message_data["message"]=message
+            message_json["message"]=message
 
         labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
         labelframe.pack(padx=10,pady=10,anchor=E)
@@ -239,15 +246,10 @@ class Software:
 
         self.chatframe.outer.after(10,self.update_scrollbar)
         self.message_entry.after(10,self.clear_text)
-
-        message_json = {
-            "process":"message_boardcast",
-            "mobile_number":self.mobilelabel.cget("text"),
-            "message":message
-        }
         
         self.client.send(json.dumps(message_json).encode("utf-8"))
         self.clear_text
+        self.message_send_thread.join()
 
     def receive(self):
         print("Listening Server")
@@ -260,7 +262,7 @@ class Software:
                     Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack()
 
                     self.chatframe.outer.after(10,self.update_scrollbar)
-
+            self.receive_thread.join()
             self.main.after(100,self.receive)
 
         except Exception as e:
