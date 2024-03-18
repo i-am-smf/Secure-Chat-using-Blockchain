@@ -108,7 +108,7 @@ class Software:
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self.client.connect(("192.168.207.35", 5555))
+            self.client.connect(("192.168.222.35", 5555))
             self.client_connected=True
         
         except Exception as error:
@@ -252,21 +252,21 @@ class Software:
 
     def receive(self):
         print("Listening Server")
-        try:
-            dict_data = json.loads(self.client.recv(1024).decode('utf-8'))
-            if dict_data['process'] == 'message_boardcast':
-                if dict_data['mobile_number']!=self.mobilelabel.cget('text'):
-                    labelframe=LabelFrame(self.chatframe,text=f"{dict_data['username']} {datetime.datetime.now().__format__('%d-%m-%Y %H:%M:%S')}")
-                    labelframe.pack(padx=10,pady=10,anchor=W)
-                    Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack()
+        while True:
+            try:
+                dict_data = json.loads(self.client.recv(1024).decode('utf-8'))
+                if dict_data['process'] == 'message_boardcast':
+                    if dict_data['mobile_number']!=self.mobilelabel.cget('text'):
+                        labelframe=LabelFrame(self.chatframe,text=f"{dict_data['username']} {datetime.datetime.now().__format__('%d-%m-%Y %H:%M:%S')}")
+                        labelframe.pack(padx=10,pady=10,anchor=W)
+                        Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack()
 
-                    self.chatframe.outer.after(10,self.update_scrollbar)
-            self.receive_thread.join()
-            self.main.after(100,self.receive)
+                        self.chatframe.outer.after(10,self.update_scrollbar)
+                # self.receive_thread.join()
 
-        except Exception as e:
-            print(f"Error: {e}")
-
+            except Exception as e:
+                print(f"Error: {e}")
+                break
 
     def on_closing(self):
         self.running = False

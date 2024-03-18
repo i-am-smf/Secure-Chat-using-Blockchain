@@ -129,7 +129,7 @@ class server:
             if dict_data['process']=="message_boardcast":
                 print(dict_data)
                 dict_data['username']=db.get_username(dict_data['mobile_number'])
-                self.broadcast(dict_data)
+                self.broadcast(dict_data,client_socket)
                 return
             
         except Exception as e:
@@ -137,16 +137,17 @@ class server:
             client_socket.send(json.dumps(data_json).encode('utf-8'))
             raise e
         
-    def broadcast(self,message):
+    def broadcast(self,message,client_socket):
         for client in self.clients:
-            try:
-                client.send(json.dumps(message).encode('utf-8'))
-                print("Sended")
-                
-            except Exception as e:
-                print(f"Error: {e}")
-                client.close()
-                self.clients.remove(client)
+            if client!=client_socket:                
+                try:
+                    client.send(json.dumps(message).encode('utf-8'))
+                    print("Sended")
+                    
+                except Exception as e:
+                    print(f"Error: {e}")
+                    client.close()
+                    self.clients.remove(client)
 
 
 server()
