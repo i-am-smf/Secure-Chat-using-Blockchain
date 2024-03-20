@@ -212,7 +212,7 @@ class Software:
             self.chatframe.destroy()
         except:
             pass
-        self.chatframe = VerticalScrolledFrame(self,background="#87CEFA",width=980,height=610)
+        self.chatframe = VerticalScrolledFrame(self.main,background="#87CEFA",width=980,height=610)
         self.chatframe.place(x=200,y=1)
 
         self.update_scrollbar
