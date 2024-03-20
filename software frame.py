@@ -262,7 +262,6 @@ class Software:
                         Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack()
 
                         self.chatframe.outer.after(10,self.update_scrollbar)
-                # self.receive_thread.join()
 
             except Exception as e:
                 print(f"Error: {e}")
