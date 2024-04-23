@@ -5,7 +5,7 @@ import json
 
 class ZchatDB:
     def __init__(self) -> None:
-        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u946_VhqYu6cZi0', passwd='d=a^xJuOm4jORFz^Odi!1tm7',database="s946_zchat")
+        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u976_gnkDh36YMz', passwd='TGa+YPp8W7p9Wny^roQk4^8j',database="s976_zchat")
         self.cur = self.connect.cursor()
         print("Database connected successfully")
 

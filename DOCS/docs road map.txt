@@ -1,0 +1,20 @@
+1. Team Introduction
+2. Domain
+3. Introduction
+4. Objective
+5. Literature Survey 1
+6. Literature Survey 2
+7. Existing System
+8. Proposed System
+9. Methodology
+10. Key features
+11. Encryption Protocol
+12. Black-Chain Authentication
+13. Implementation
+14. Software and Hardware Requirements
+15. Modules
+16. Activity Diagram (Diagram)
+17. Testing and Validation
+18. Conclusion
+19. Questions (No content)
+20. Thank You (No content)
