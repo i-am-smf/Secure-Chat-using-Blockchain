@@ -101,6 +101,7 @@ class Software:
 
         self.loginpage.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.main.mainloop()
+        
     def send_message_thread(self):
         self.message_send_thread=threading.Thread(self.send_message)
         self.message_send_thread.start()
@@ -238,6 +239,7 @@ class Software:
         if message.endswith("\n"):
             message=message[:-1]
             message_json["message"]=message
+            message_json['hash']=hash(message)
 
         labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
         labelframe.pack(padx=10,pady=10,anchor=E)
