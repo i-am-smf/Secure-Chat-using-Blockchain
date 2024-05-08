@@ -5,7 +5,7 @@ import json
 
 class ZchatDB:
     def __init__(self) -> None:
-        self.connect = mysql.connector.connect(host='maple.db.ashhost.in', user='u976_gnkDh36YMz', passwd='TGa+YPp8W7p9Wny^roQk4^8j',database="s976_zchat")
+        self.connect = mysql.connector.connect(host='127.0.0.1', user='root', passwd='smfsql123',database="zchat")
         self.cur = self.connect.cursor()
         print("Database connected successfully")
 
@@ -35,7 +35,7 @@ class ZchatDB:
         self.cur.execute(f"SELECT username FROM users where mobile_number = dataenc({mobile_number})")
         result=self.cur.fetchone()
         if len(result)==1:
-            return result[0][0]
+            return result[0]
         else:
             return "Nick"
         
@@ -70,7 +70,7 @@ db=ZchatDB()
 class server:
     def __init__(self) -> None:
         server = socket(AF_INET, SOCK_STREAM)
-        server.bind((gethostbyname(gethostname()), 5555))
+        server.bind(("127.0.0.1", 5555))
         server.listen()
 
         print("Server is listening for incoming connections...")
@@ -127,7 +127,6 @@ class server:
                 return
             
             if dict_data['process']=="message_boardcast":
-                print(dict_data)
                 dict_data['username']=db.get_username(dict_data['mobile_number'])
                 self.broadcast(dict_data,client_socket)
                 return
@@ -138,11 +137,11 @@ class server:
             raise e
         
     def broadcast(self,message,client_socket):
+        print(message)
         for client in self.clients:
             if client!=client_socket:                
                 try:
                     client.send(json.dumps(message).encode('utf-8'))
-                    print("Sended")
                     
                 except Exception as e:
                     print(f"Error: {e}")

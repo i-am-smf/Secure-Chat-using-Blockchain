@@ -1,10 +1,11 @@
-from tkinter import *
 import datetime
 import json
-from tkinter import messagebox
 import socket
 import threading
-
+import base64
+from cryptography.fernet import Fernet
+from tkinter import messagebox
+from tkinter import *
     
 class VerticalScrolledFrame:
     def __init__(self, master, **kwargs):
@@ -62,8 +63,8 @@ class VerticalScrolledFrame:
 
 class Software:
     def __init__(self):
-        self.connect()
-        threading.Thread(target=self.software).start()
+        if self.connect():
+            threading.Thread(target=self.software).start()
 
     def software(self):
         self.main=Tk()
@@ -109,14 +110,15 @@ class Software:
     def connect(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self.client.connect(("192.168.222.35", 5555))
+            self.client.connect(("127.0.0.1", 5555))
             self.client_connected=True
+            return True
         
         except Exception as error:
             print(error)
             self.nickname = messagebox.showwarning(title="Connection Error",message="Please check your internet and try again.\nIf your internet isn't problem Please contact admin to resolve this issue")
             self.on_closing()
-            return
+            return False
 
     def showmainpage(self):
         self.main.deiconify()
@@ -156,6 +158,7 @@ class Software:
         }
         self.client.send(json.dumps(dict_data).encode('utf-8'))
         server_response = self.client.recv(1024).decode("utf-8")
+        print(server_response)
         server_response=json.loads(server_response)
         if server_response['process']=="found":
             return True
@@ -223,8 +226,7 @@ class Software:
 
     def send_message(self,event=None):
         message=self.message_entry.get("1.0",END)
-
-
+        mobile_number=self.mobilelabel.cget("text")
         if message.startswith("\n") and len(message.split("\n"))<1:
 
             messagebox.showwarning(title="Empty Message",message="The first Line is Empty")
@@ -233,12 +235,12 @@ class Software:
 
         message_json = {
                 "process":"message_boardcast",
-                "mobile_number":self.mobilelabel.cget("text")
+                "mobile_number":mobile_number
             }
         
         if message.endswith("\n"):
             message=message[:-1]
-            message_json["message"]=message
+            message_json["message"]=ZS.encrypt_message(message,mobile_number).decode('utf-8')
             message_json['hash']=hash(message)
 
         labelframe=LabelFrame(self.chatframe,text=datetime.datetime.now().__format__("%d-%m-%Y %H:%M:%S"))
@@ -261,7 +263,8 @@ class Software:
                     if dict_data['mobile_number']!=self.mobilelabel.cget('text'):
                         labelframe=LabelFrame(self.chatframe,text=f"{dict_data['username']} {datetime.datetime.now().__format__('%d-%m-%Y %H:%M:%S')}")
                         labelframe.pack(padx=10,pady=10,anchor=W)
-                        Label(labelframe,text=dict_data['message'],font=("Arial",12)).pack()
+                        message=ZS.decrypt_message(dict_data['message'],dict_data['mobile_number']).encode('utf-8')
+                        Label(labelframe,text=message,font=("Arial",12)).pack()
 
                         self.chatframe.outer.after(10,self.update_scrollbar)
 
@@ -301,5 +304,34 @@ class Software:
     def clicker(self,event:Event):
         if event.keysym=="slash":
             self.message_entry.focus()
+
+class ZSecure:
+
+    def encrypt_message(self, message, mobile_number):
+        cipher_suite = Fernet(self.key_generator(mobile_number=mobile_number))
+        encrypted_message = cipher_suite.encrypt(message.encode())
+        return encrypted_message
+
+    def key_generator(self,mobile_number,timestamp=False):
+        if not timestamp:
+            timestamp=str(int(datetime.datetime.now().timestamp()))
+        str_key=timestamp+mobile_number
+        if len(str_key) > 32 or len(str_key) < 32:
+            str_key= '0' * (32 - len(str_key)) + str_key
+        key=base64.b64encode(f"{str_key}".encode('utf-8'))
+        return key
+    
+    def decrypt_message(self,message,mobile_number):
+        timestamp=str(int(datetime.datetime.now().timestamp()))
+        while True:
+            key=self.key_generator(mobile_number=mobile_number,timestamp=timestamp)
+            try:
+                fernet=Fernet(key=key)
+                decrypted_message = fernet.decrypt(message).decode()
+                return decrypted_message
+            except:
+                timestamp=str(int(timestamp)-1)
+
+ZS=ZSecure()
 
 Software()
