@@ -1,6 +1,7 @@
 from cryptography.fernet import Fernet
 import base64
 import datetime
+
 class SecureChat:
     def __init__(self):
 
@@ -25,7 +26,7 @@ class SecureChat:
         return key
     
     def test_decrypt(self):
-        encrypted_message=b'gAAAAABmKeihlSjhokdDD0os21DcZfOcZ_hwtCc1FcMlRhdiQmlAMf5KS3hpevEeao7k8arXeqk5um_1LmSgU71rogHLn7l08q1O8PSPhNN6AIoVtv2e0325YCsbvD93HMfEu_3aBFTf'
+        encrypted_message=b'gAAAAABmQMPa82A08kuhp4VPU-kHoowQgLFHTyESOG4zJWZ3-rr6Qd5GU5xF_JbwhDdsCVhac5HHSwOAY2lvJErdwtxCAOW00Tyx5ScKQGjbUGbxbdfL0S8='
         timestamp=str(int(datetime.datetime.now().timestamp()))
         while True:
             
@@ -48,19 +49,5 @@ class SecureChat:
 
 SecureChat().test_decrypt()
 
-# key = Fernet.generate_key()
-# key = base64.b64encode("alllsmnflilmslcovlanmielvloslvms".encode('utf-8'))
-
-# alice_chat = SecureChat()
-# bob_chat = SecureChat()
-
-# # Alice sends a message
-# alice_message = "Hello, Bob! This is a secure message."
-# encrypted_message = alice_chat.encrypt_message(alice_message)
-
-# print(encrypted_message)
-# # Bob receives and decrypts the message
-# decrypted_message = bob_chat.decrypt_message(encrypted_message)
-
-# print(f"Alice: {alice_message}")
-# print(f"Bob (Decrypted): {decrypted_message}")
+# data=SecureChat().encrypt_message("Hello Prem")
+# print(data)
